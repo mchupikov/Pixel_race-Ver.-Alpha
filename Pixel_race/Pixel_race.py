@@ -5,6 +5,7 @@ font.init()
 mixer.init()
 mixer.music.load("Audio\On_the_road_to_the_eighties.mp3")
 ftxt1 = font.Font("Fonts\Pixel.ttf", 80)
+ftxt2 = font.Font("Fonts\Pixel.ttf", 40)
 w = display.set_mode((1000, 800))
 bg1 = transform.scale(image.load("Images\Roads.png"), (1000, 800))
 bg2 = transform.scale(image.load("Images\Roads.png"), (1000, 800))
@@ -20,14 +21,16 @@ block_anim = [transform.scale(image.load("Images\Block_1.png"), (100, 100)),
               transform.scale(image.load("Images\Block_2.png"), (100, 100)),
               transform.scale(image.load("Images\Block_3.png"), (100, 100)),
               transform.scale(image.load("Images\Block_3.png"), (100, 100))]
-with open("JSONfiles\settings_save.json", "r") as file:
-    data_set = json.load(file)
+with open("JSONfiles\settings_save.json", "r") as file_set:
+    data_set = json.load(file_set)
+with open("JSONfiles\scores.json", "r") as file_rec:
+    data_rec = json.load(file_rec)
 music_volume = data_set["mus_vol"]
 sound_volume = data_set["s_vol"]
 accident_sound = mixer.Sound("Audio\An_accident.ogg")
 accident_sound.set_volume(sound_volume)
 mixer.music.set_volume(music_volume)
-mixer.music.play()
+mixer.music.play(-1)
 r_car_anim_count = 0
 block_anim_count = 0
 x_bg_move = 0
@@ -35,6 +38,7 @@ x_bg2_move = 1000
 game = 1
 fps = 40
 finish = 0
+score = 0
 screen = "menu"
 class GameSprite(sprite.Sprite):
     def __init__(self, filename, w, h, x, y, speed):
@@ -68,7 +72,7 @@ class Buttons(sprite.Sprite):
         self.sound.play()
 class RaceCar(GameSprite):
     def update(self):
-        global r_car_anim_count
+        global r_car_anim_count, score
         if r_car_anim_count <= 1:
             w.blit(r_car_anim[r_car_anim_count], (self.rect.x, self.rect.y))
             r_car_anim_count += 1
@@ -85,9 +89,11 @@ class RaceCar(GameSprite):
         if keys[K_LEFT] or keys[K_a]:
             if self.rect.x >= 0:
                 self.rect.x -= self.speed
+                score -= 1
         if keys[K_RIGHT] or keys[K_d]:
             if self.rect.x <= 1000 - self.rect.w:
                 self.rect.x += self.speed
+                score += 1
 class Car(GameSprite):
     def update(self):
         self.rect.x -= self.speed
@@ -120,6 +126,8 @@ game_over_txt = ftxt1.render("Game over!!!", True, (255, 0, 0))
 settings_title = ftxt1.render("Налаштування", True, (0, 0, 0))
 sound_text = ftxt1.render("Гучність звуку", True, (0, 0, 0))
 music_text = ftxt1.render("Гучність музики", True, (0, 0, 0))
+records_title = ftxt1.render("Рекорди", True, (0, 0, 0))
+score_text = ftxt2.render(str(score), True, (0, 0, 0))
 gamelogo = transform.scale(image.load("Images\Game_logo.png"), (600, 78))
 rc = RaceCar("Images\Car_1.png", 160, 78, 200, 485, 5)
 car_npc = Car("Images\Red_car.png", 160, 78, 1160, 485, 5)
@@ -200,9 +208,11 @@ while game:
                 x, y = e.pos
                 if btn_ex.rect.collidepoint(x, y):
                     btn_ex.playsound()
+                    score = 0
                     screen = "menu"
                 if btn_reset.rect.collidepoint(x, y):
                     btn_reset.playsound()
+                    score = 0
                     finish = 0
                     rc.rect.x, rc.rect.y = 200, 485
                     car_npc.rect.x, car_npc.rect.y = 1160, 705
@@ -218,6 +228,7 @@ while game:
             x_bg_move -= 5
             w.blit(bg2, (x_bg2_move, 0))
             x_bg2_move -= 5
+            w.blit(score_text, (700, 100))
             if x_bg_move <= -1000:
                 x_bg_move = 1000
             if x_bg2_move <= -1000:
@@ -229,6 +240,8 @@ while game:
             btn_ex.blitbutton()
             for h in lifes:
                 h.reset()
+            score += 1
+            score_text = ftxt2.render(str(score), True, (0, 0, 0))
         if finish:
             w.blit(game_over_txt, (300, 150))
             btn_reset.blitbutton()
@@ -238,15 +251,21 @@ while game:
                 life = GameSprite("Images\Heart.png", 50, 50, life_x, 10, 0)
                 lifes.append(life)
                 life_x += 75
+            if score > data_rec["l_m_score"]:
+                with open("JSONfiles\scores.json", "w") as file_rec:
+                    data_rec['l_m_score'] = score
+                    json.dump(data_rec, file_rec)
     if screen == "normal":
         for e in event.get():
             if e.type == MOUSEBUTTONDOWN and e.button == 1:
                 x, y = e.pos
                 if btn_ex.rect.collidepoint(x, y):
                     btn_ex.playsound()
+                    score = 0
                     screen = "menu"
                 if btn_reset.rect.collidepoint(x, y):
                     btn_reset.playsound()
+                    score = 0
                     finish = 0
                     rc.rect.x, rc.rect.y = 200, 485
                     car_npc.rect.x, car_npc.rect.y = 1160, 485
@@ -263,6 +282,7 @@ while game:
             x_bg_move -= 5
             w.blit(bg2, (x_bg2_move, 0))
             x_bg2_move -= 5
+            w.blit(score_text, (700, 100))
             if x_bg_move <= -1000:
                 x_bg_move = 1000
             if x_bg2_move <= -1000:
@@ -276,6 +296,8 @@ while game:
             btn_ex.blitbutton()
             for h in lifes:
                 h.reset()
+            score += 1
+            score_text = ftxt2.render(str(score), True, (0, 0, 0))
         if finish:
             w.blit(game_over_txt, (300, 150))
             btn_reset.blitbutton()
@@ -285,15 +307,21 @@ while game:
                 life = GameSprite("Images\Heart.png", 50, 50, life_x, 10, 0)
                 lifes.append(life)
                 life_x += 75
+            if score > data_rec["n_m_score"]:
+                with open("JSONfiles\scores.json", "w") as file_rec:
+                    data_rec['n_m_score'] = score
+                    json.dump(data_rec, file_rec)
     if screen == "hard":
         for e in event.get():
             if e.type == MOUSEBUTTONDOWN and e.button == 1:
                 x, y = e.pos
                 if btn_ex.rect.collidepoint(x, y):
                     btn_ex.playsound()
+                    score = 0
                     screen = "menu"
                 if btn_reset.rect.collidepoint(x, y):
                     btn_reset.playsound()
+                    score = 0
                     finish = 0
                     rc.rect.x, rc.rect.y = 200, 485
                     car_npc.rect.x, car_npc.rect.y = 1160, 485
@@ -311,6 +339,7 @@ while game:
             x_bg_move -= 5
             w.blit(bg2, (x_bg2_move, 0))
             x_bg2_move -= 5
+            w.blit(score_text, (700, 100))
             if x_bg_move <= -1000:
                 x_bg_move = 1000
             if x_bg2_move <= -1000:
@@ -326,6 +355,8 @@ while game:
             btn_ex.blitbutton()
             for h in lifes:
                 h.reset()
+            score += 1
+            score_text = ftxt2.render(str(score), True, (0, 0, 0))
         if finish:
             w.blit(game_over_txt, (300, 150))
             btn_reset.blitbutton()
@@ -335,6 +366,10 @@ while game:
                 life = GameSprite("Images\Heart.png", 50, 50, life_x, 10, 0)
                 lifes.append(life)
                 life_x += 75
+            if score > data_rec["h_m_score"]:
+                with open("JSONfiles\scores.json", "w") as file_rec:
+                    data_rec['h_m_score'] = score
+                    json.dump(data_rec, file_rec)
     if screen == "menu":
         for e in event.get():
             if e.type == MOUSEBUTTONDOWN and e.button == 1:
@@ -342,6 +377,7 @@ while game:
                 if btn_ex.rect.collidepoint(x, y):
                     btn_ex.playsound()
                     game = 0
+                    print(score)
                 if btn_play.rect.collidepoint(x, y):
                     btn_play.playsound()
                     screen = "chosing_difficulity"
@@ -370,49 +406,49 @@ while game:
                     screen = "menu"
                 if btn_mute_sound.rect.collidepoint(x, y):
                     btn_mute_sound.playsound()
-                    with open("JSONfiles\settings_save.json", "w") as file:
+                    with open("JSONfiles\settings_save.json", "w") as file_set:
                         data_set["s_vol"] = 0
                         sound_volume = data_set["s_vol"]
-                        json.dump(data_set, file)
+                        json.dump(data_set, file_set)
                     accident_sound.set_volume(sound_volume)
                 if btn_minus_sound.rect.collidepoint(x, y):
                     if sound_volume > 0:
                         btn_minus_sound.playsound()
-                        with open("JSONfiles\settings_save.json", "w") as file:
+                        with open("JSONfiles\settings_save.json", "w") as file_set:
                             data_set["s_vol"] -= 0.1
                             sound_volume = data_set["s_vol"]
-                            json.dump(data_set, file)
+                            json.dump(data_set, file_set)
                         accident_sound.set_volume(sound_volume)
                 if btn_plus_sound.rect.collidepoint(x, y):
                     if sound_volume < 1:
                         btn_plus_sound.playsound()
-                        with open("JSONfiles\settings_save.json", "w") as file:
+                        with open("JSONfiles\settings_save.json", "w") as file_set:
                             data_set["s_vol"] += 0.1
                             sound_volume = data_set["s_vol"]
-                            json.dump(data_set, file)
+                            json.dump(data_set, file_set)
                         accident_sound.set_volume(sound_volume)
                 if btn_mute_music.rect.collidepoint(x, y):
                     btn_mute_music.playsound()
-                    with open("JSONfiles\settings_save.json", "w") as file:
+                    with open("JSONfiles\settings_save.json", "w") as file_set:
                         data_set["mus_vol"] = 0
                         music_volume = data_set["mus_vol"]
-                        json.dump(data_set, file)
+                        json.dump(data_set, file_set)
                     mixer.music.set_volume(music_volume)
                 if btn_minus_music.rect.collidepoint(x, y):
                     if music_volume > 0:
                         btn_minus_music.playsound()
-                        with open("JSONfiles\settings_save.json", "w") as file:
+                        with open("JSONfiles\settings_save.json", "w") as file_set:
                             data_set["mus_vol"] -= 0.1
                             music_volume = data_set["mus_vol"]
-                            json.dump(data_set, file)
+                            json.dump(data_set, file_set)
                         mixer.music.set_volume(music_volume)
                 if btn_plus_music.rect.collidepoint(x, y):
                     if music_volume < 1:
                         btn_plus_music.playsound()
-                        with open("JSONfiles\settings_save.json", "w") as file:
+                        with open("JSONfiles\settings_save.json", "w") as file_set:
                             data_set["mus_vol"] += 0.1
                             music_volume = data_set["mus_vol"]
-                            json.dump(data_set, file)
+                            json.dump(data_set, file_set)
                         mixer.music.set_volume(music_volume)
         w.blit(bg1, (0, 0))
         w.blit(settings_title, (150, 100))
@@ -433,7 +469,14 @@ while game:
                     btn_ex.playsound()
                     screen = "menu"
         w.blit(bg1, (0, 0))
+        w.blit(records_title, (300, 150))
         btn_ex.blitbutton()
+        score_text_lite = ftxt1.render("Легка: " + str(data_rec["l_m_score"]), True, (0, 0, 0))
+        score_text_normal = ftxt1.render("Нормальна: " + str(data_rec["n_m_score"]), True, (0, 0, 0))
+        score_text_hard = ftxt1.render("Складна: " + str(data_rec["h_m_score"]), True, (0, 0, 0))
+        w.blit(score_text_lite, (200, 300))
+        w.blit(score_text_normal, (200, 400))
+        w.blit(score_text_hard, (200, 500))
     if screen == "rules":
         for e in event.get():
             if e.type == MOUSEBUTTONDOWN and e.button == 1:
