@@ -6,6 +6,7 @@ mixer.init()
 mixer.music.load("Audio\On_the_road_to_the_eighties.mp3")
 ftxt1 = font.Font("Fonts\Pixel.ttf", 80)
 ftxt2 = font.Font("Fonts\Pixel.ttf", 40)
+ftxt3 = font.Font("Fonts\Pixel.ttf", 20)
 w = display.set_mode((1000, 800))
 bg1 = transform.scale(image.load("Images\Roads.png"), (1000, 800))
 bg2 = transform.scale(image.load("Images\Roads.png"), (1000, 800))
@@ -127,7 +128,16 @@ settings_title = ftxt1.render("Налаштування", True, (0, 0, 0))
 sound_text = ftxt1.render("Гучність звуку", True, (0, 0, 0))
 music_text = ftxt1.render("Гучність музики", True, (0, 0, 0))
 records_title = ftxt1.render("Рекорди", True, (0, 0, 0))
+rules_title = ftxt1.render("Правила гри", True, (0, 0, 0))
 score_text = ftxt2.render(str(score), True, (0, 0, 0))
+rules_text5 = ftxt2.render("Складності гри", True, (50, 50, 50))
+rules_text1 = ftxt3.render("Pixel race - піксельна гра-симулятор кермування автомобілем,", True, (50, 50, 50))
+rules_text2 = ftxt3.render("мета якої набрати більше очок і уникати зіткнень з перешкодами.", True, (50, 50, 50))
+rules_text3 = ftxt3.render("Ви можете керувати гоночним автомобілем стрілочками або клавішами", True, (50, 50, 50))
+rules_text4 = ftxt3.render("d - вперед, a - назад, w - вгору, s - вниз.", True, (50, 50, 50))
+rules_text6 = ftxt3.render("Легка: три життя, перешкоди - звичайні автомобілі.", True, (0, 0, 0))
+rules_text7 = ftxt3.render("Нормальна: два життя, перешкоди - звичайні автомобілі і блоки.", True, (0, 0, 0))
+rules_text8 = ftxt3.render("Складна: два життя, перешкоди - звичайні автомобілі, блоки і автобус.", True, (0, 0, 0))
 gamelogo = transform.scale(image.load("Images\Game_logo.png"), (600, 78))
 rc = RaceCar("Images\Car_1.png", 160, 78, 200, 485, 5)
 car_npc = Car("Images\Red_car.png", 160, 78, 1160, 485, 5)
@@ -386,6 +396,7 @@ while game:
                     screen = "settings"
                 if btn_rules.rect.collidepoint(x, y):
                     btn_rules.playsound()
+                    btn_play.rect.x, btn_play.rect.y = 300, 600
                     screen = "rules"
                 if btn_records.rect.collidepoint(x, y):
                     btn_records.playsound()
@@ -484,7 +495,22 @@ while game:
                 if btn_ex.rect.collidepoint(x, y):
                     btn_ex.playsound()
                     screen = "menu"
+                    btn_play.rect.x, btn_play.rect.y = 300, 300
+                if btn_play.rect.collidepoint(x, y):
+                    btn_play.playsound()
+                    screen = "chosing_difficulity"
+                    btn_play.rect.x, btn_play.rect.y = 300, 300
         w.blit(bg1, (0, 0))
+        w.blit(rules_title, (200, 100))
+        w.blit(rules_text1, (100, 200))
+        w.blit(rules_text2, (100, 250))
+        w.blit(rules_text3, (100, 300))
+        w.blit(rules_text4, (100, 350))
+        w.blit(rules_text5, (300, 400))
+        w.blit(rules_text6, (100, 450))
+        w.blit(rules_text7, (100, 500))
+        w.blit(rules_text8, (100, 550))
+        btn_play.blitbutton()
         btn_ex.blitbutton()
     c.tick(fps)
     display.update()
